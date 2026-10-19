@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f3f4f1">
+<title>Чек-лист выезда</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Полевой чек-лист: одна колонка под телефон, крупные цели для пальца, янтарный сигнальный акцент */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1b1f1d; --muted:#5d6661; --line:#d9ddd8;
+  --accent:#b85c00; --accent-ink:#ffffff; --ok:#2f7d4f; --code-bg:#eceee9;
+  --sans:"IBM Plex Sans",system-ui,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121514; --surface:#1b1f1d; --ink:#e7ebe8; --muted:#9aa49e; --line:#2d3330;
+  --accent:#f0a040; --accent-ink:#1b1206; --ok:#5cc386; --code-bg:#242927; color-scheme:dark;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);
+  padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(32px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:26px;line-height:1.2;margin:0;text-wrap:balance}
+h2{font-size:18px;margin:0;text-wrap:balance}
+.lead{color:var(--muted);margin:4px 0 0}
+code,.cmd{font-family:var(--mono);font-size:14px}
+code{background:var(--code-bg);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* вход */
+#gate{min-height:80vh;display:flex;align-items:center;justify-content:center}
+#gate form{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+#gate input{font:600 28px var(--mono);letter-spacing:.4em;text-align:center;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:12px 16px;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.err{color:#c0392b;min-height:1.5em;margin:0;font-size:14px}
+
+/* шапка с прогрессом */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:2;background:var(--bg);padding:8px 0 10px;border-bottom:1px solid var(--line)}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.count{font:500 14px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+
+section{display:flex;flex-direction:column;gap:10px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.note{color:var(--muted);font-size:14px;margin:0}
+
+.item{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:28px 1fr;gap:4px 12px;align-items:start}
+.item input[type=checkbox]{width:26px;height:26px;margin:0;accent-color:var(--ok);cursor:pointer}
+.item label{font-weight:600;cursor:pointer;padding-top:1px}
+.item .more{grid-column:2;color:var(--muted);font-size:15px;min-width:0}
+.item .more p{margin:4px 0}
+.item.done{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.item.done label{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--ok)}
+.item.warn{border-left:4px solid var(--accent)}
+
+.cmdrow{display:flex;gap:8px;align-items:stretch;margin:6px 0;min-width:0}
+.cmd{flex:1;min-width:0;background:var(--code-bg);border-radius:6px;padding:8px 10px;overflow-x:auto;white-space:nowrap;color:var(--ink)}
+.copy{background:transparent;border:1px solid var(--line);border-radius:6px;padding:0 10px;color:var(--ink);font-size:13px}
+
+.field{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600}
+.field input,.field textarea{font:16px var(--sans);padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.field textarea{min-height:88px;resize:vertical}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.confirm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:15px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="gate">
+  <form id="gateForm" autocomplete="off">
+    <h1>Чек-лист выезда</h1>
+    <p class="note">Введите пароль</p>
+    <input id="pw" type="password" inputmode="numeric" maxlength="8" aria-label="Пароль">
+    <p class="err" id="pwErr" role="alert"></p>
+    <button class="btn" type="submit">Войти</button>
+  </form>
+</div>
+
+<main id="app" hidden>
+  <div class="top">
+    <div class="sec-head"><h1>Чек-лист выезда</h1><span class="count" id="total"></span></div>
+    <div class="bar"><i id="totalBar"></i></div>
+  </div>
+  <p class="lead">Галочки и записи хранятся только в этом браузере на этом телефоне. В конце нажмите «Скопировать отчёт» и отправьте его в Telegram.</p>
+  <div id="sections"></div>
+
+  <section>
+    <div class="actions">
+      <button class="btn" id="copyReport" type="button">Скопировать отчёт</button>
+      <button class="btn ghost" id="resetBtn" type="button">Сбросить всё</button>
+    </div>
+    <div class="confirm" id="resetConfirm" hidden>
+      <span>Стереть все галочки и записи?</span>
+      <button class="btn" id="resetYes" type="button">Да, стереть</button>
+      <button class="btn ghost" id="resetNo" type="button">Отмена</button>
+    </div>
+    <textarea id="reportFallback" class="cmd" hidden readonly style="min-height:200px;white-space:pre"></textarea>
+  </section>
+</main>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- данные чек-листа ----------
+const SECTIONS = [
+  {id:"prep", title:"До выезда", items:[
+    {id:"prep_files", t:"Файлы оболочки и клавиатуры на ноутбуке",
+     d:"<p>В папке библиотеки программы лежат <code>VdApps.apk</code> (оболочка 1.5), <code>VdKeyboard.apk</code> и папка <code>kit\\</code>.</p>"},
+    {id:"prep_pw", t:"Пароль приёмки задан", d:"<p>Меню «Устройство → приёмка машины…» открывается.</p>"},
+    {id:"prep_bot", t:"Telegram-бот настроен",
+     d:"<p>Если нет — не страшно: журнал всё равно сохранится в папке <code>checks</code> библиотеки.</p>"},
+    {id:"prep_hw", t:"Кабели и заряд", d:"<p>Рабочий USB-кабель, лучше два. Ноутбук заряжен.</p>"},
+  ]},
+  {id:"car", title:"На машине по порядку",
+   note:"Машина стоит, зажигание включено. Не глушить во время операций.", items:[
+    {id:"car_link", t:"Подключение",
+     d:"<p>Кабель, подтвердить отладку на экране машины, в шапке программы — зелёная точка.</p>"},
+    {id:"car_install", t:"«Установить» в профиле машины",
+     d:"<p>Если программа предложит «другая подпись на машине» — данные этого приложения пропадут. Соглашаться только осознанно.</p>", warn:true},
+    {id:"car_perm", t:"Права сторонним приложениям"},
+    {id:"car_kbd", t:"Клавиатура RU/EN"},
+    {id:"car_shell", t:"Оболочка VD"},
+    {id:"car_check", t:"Приёмка машины",
+     d:"<p>Все автоматические пункты → «Перезагрузка и персистентность» → ручные пункты «глазами» → «Отправить боту».</p>"},
+  ]},
+  {id:"log", title:"Записать из журнала приёмки", fields:[
+    {id:"f_density", t:"Плотность экрана (пункт «Экран»)", ph:"например 320", short:true},
+    {id:"f_font", t:"Масштаб шрифта (пункт «Экран»)", ph:"например 1.0", short:true},
+    {id:"f_reject", t:"Точный текст отказа при гейте = 1", ph:"скопировать из журнала"},
+    {id:"f_warn", t:"Все warn и fail — с текстом пункта", ph:"пункт: текст"},
+  ]},
+  {id:"hand", title:"Руками — этого приёмка не проверяет",
+   note:"Команды можно вводить во вкладке «Терминал» программы (Ctrl+T) без префикса «adb shell».", items:[
+    {id:"h_grid", t:"Подогнать сетку витрины под заводскую",
+     d:"<p>Снять скриншоты заводского лаунчера и витрины VD:</p>"
+      + cmd("adb exec-out screencap -p > factory.png")
+      + "<p>Размер в dp/sp = заводские px ÷ (плотность ÷ 160). Подпись ещё делить на масштаб шрифта. Записать в <code>grid.json</code> (папка библиотеки, рядом с <code>VdApps.apk</code>), например <code>{\"iconDp\": 60, \"labelSp\": 15}</code>, и снова запустить «Оболочка VD».</p>"
+      + "<p>Подписи сравнивать глазами рядом с заводскими.</p>"},
+    {id:"h_ignition", t:"Настоящий цикл зажигания", warn:true,
+     d:"<p>Заглушить машину, подождать 10–15 минут, завести. Магнитолы часто засыпают вместо полной перезагрузки — <code>adb reboot</code> этого не показывает.</p>"
+      + "<p>После: снова прогнать автоматические пункты приёмки (кроме перезагрузки) — гейт подписи открыт, свайп включён, клавиатура и наши приложения на месте. Иконки в лаунчере — глазами.</p>"
+      + cmd("adb shell settings get secure default_input_method")},
+    {id:"h_swipe", t:"Свайп от края в Яндекс Навигаторе и Картах",
+     d:"<p>Если полоса мешает жестам карты — записать пакеты приложений и вписать в <code>back-gesture.json</code> (там же, рядом с <code>VdApps.apk</code>), например <code>{\"hideIn\": [\"ru.yandex.yandexnavi\"]}</code>. Там же ширина полосы <code>stripDp</code> (4–40) и порог <code>thresholdDp</code> (12–120). Потом снова «Оболочка VD».</p>"},
+    {id:"h_apps", t:"Каждое наше приложение по-настоящему",
+     d:"<p>Звук идёт в колонки, навигатор видит GPS, микрофон для Алисы работает, есть сеть.</p>"},
+    {id:"h_hooks", t:"Хуки (frida) — строго последними", warn:true,
+     d:"<p>Только после приёмки и без галочки «автозапуск». На живой машине ещё не проверялись. После перезагрузки убедиться, что хуки снялись и машина работает нормально.</p>"},
+  ]},
+  {id:"end", title:"Перед отъездом", items:[
+    {id:"e_send", t:"Журнал приёмки отправлен боту"},
+    {id:"e_shots", t:"Скриншоты забраны на ноутбук"},
+    {id:"e_notes", t:"Плотность, масштаб шрифта и замечания записаны выше"},
+  ], fields:[
+    {id:"f_notes", t:"Замечания по сетке, свайпу, приложениям", ph:"что заметили"},
+  ]},
+];
+function cmd(s){ return `<div class="cmdrow"><div class="cmd">${s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div><button class="copy" type="button" data-copy="${s.replace(/"/g,"&quot;")}">Копировать</button></div>`; }
+
+// ---------- состояние (только в этом браузере) ----------
+const KEY = "vd-checklist-v1";
+let state = {checks:{}, fields:{}};
+try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s === "object") state = {checks:s.checks||{}, fields:s.fields||{}}; } catch(e){}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+
+// ---------- вход ----------
+const UNLOCK = "vd-checklist-unlocked";
+function unlocked(){ try { return localStorage.getItem(UNLOCK) === "1"; } catch(e){ return false; } }
+function openApp(){ document.getElementById("gate").hidden = true; document.getElementById("app").hidden = false; render(); }
+document.getElementById("gateForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = document.getElementById("pw").value.trim();
+  if (v === "1234") { try { localStorage.setItem(UNLOCK, "1"); } catch(e){} openApp(); }
+  else { document.getElementById("pwErr").textContent = "Неверный пароль. Попробуйте ещё раз."; document.getElementById("pw").select(); }
+});
+if (unlocked()) openApp(); else document.getElementById("pw").focus();
+
+// ---------- отрисовка ----------
+function render(){
+  const root = document.getElementById("sections");
+  root.innerHTML = "";
+  for (const s of SECTIONS) {
+    const sec = document.createElement("section");
+    const n = (s.items||[]).length;
+    sec.innerHTML = `<div class="sec-head"><h2>${s.title}</h2>${n ? `<span class="count" data-sec="${s.id}"></span>` : ""}</div>`
+      + (s.note ? `<p class="note">${s.note}</p>` : "");
+    for (const it of s.items||[]) {
+      const el = document.createElement("div");
+      el.className = "item" + (it.warn ? " warn" : "") + (state.checks[it.id] ? " done" : "");
+      el.innerHTML = `<input type="checkbox" id="${it.id}" ${state.checks[it.id] ? "checked" : ""}><label for="${it.id}">${it.t}</label>`
+        + (it.d ? `<div class="more">${it.d}</div>` : "");
+      el.querySelector("input").addEventListener("change", ev => {
+        if (ev.target.checked) state.checks[it.id] = true; else delete state.checks[it.id];
+        el.classList.toggle("done", ev.target.checked); save(); progress();
+      });
+      sec.appendChild(el);
+    }
+    for (const f of s.fields||[]) {
+      const el = document.createElement("div");
+      el.className = "field";
+      const tag = f.short ? `<input id="${f.id}" type="text" inputmode="decimal" placeholder="${f.ph}">`
+                          : `<textarea id="${f.id}" placeholder="${f.ph}"></textarea>`;
+      el.innerHTML = `<label for="${f.id}">${f.t}</label>${tag}`;
+      const input = el.querySelector("input,textarea");
+      input.value = state.fields[f.id] || "";
+      let t; input.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { state.fields[f.id] = input.value; save(); }, 300); });
+      sec.appendChild(el);
+    }
+    root.appendChild(sec);
+  }
+  progress();
+}
+function progress(){
+  let all = 0, done = 0;
+  for (const s of SECTIONS) {
+    const items = s.items||[]; const d = items.filter(i => state.checks[i.id]).length;
+    all += items.length; done += d;
+    const c = document.querySelector(`[data-sec="${s.id}"]`); if (c) c.textContent = `${d} / ${items.length}`;
+  }
+  document.getElementById("total").textContent = `${done} / ${all}`;
+  document.getElementById("totalBar").style.width = (all ? done / all * 100 : 0) + "%";
+}
+
+// ---------- копирование ----------
+function toast(s){ const t = document.getElementById("toast"); t.textContent = s; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 1800); }
+async function copyText(s){
+  try { await navigator.clipboard.writeText(s); return true; } catch(e){ return false; }
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  toast(await copyText(b.dataset.copy) ? "Команда скопирована" : "Не скопировалось — выделите текст вручную");
+});
+function report(){
+  const lines = ["Чек-лист выезда — " + new Date().toLocaleString("ru-RU"), ""];
+  for (const s of SECTIONS) {
+    lines.push("## " + s.title);
+    for (const it of s.items||[]) lines.push((state.checks[it.id] ? "[x] " : "[ ] ") + it.t);
+    for (const f of s.fields||[]) lines.push(f.t + ": " + ((state.fields[f.id]||"").trim() || "—"));
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+document.getElementById("copyReport").addEventListener("click", async () => {
+  // свежие значения полей, даже если пауза ввода ещё не истекла
+  document.querySelectorAll(".field input,.field textarea").forEach(i => state.fields[i.id] = i.value); save();
+  const text = report(), fb = document.getElementById("reportFallback");
+  if (await copyText(text)) { fb.hidden = true; toast("Отчёт скопирован"); }
+  else { fb.value = text; fb.hidden = false; fb.focus(); fb.select(); toast("Выделите текст ниже и скопируйте"); }
+});
+document.getElementById("resetBtn").addEventListener("click", () => document.getElementById("resetConfirm").hidden = false);
+document.getElementById("resetNo").addEventListener("click", () => document.getElementById("resetConfirm").hidden = true);
+document.getElementById("resetYes").addEventListener("click", () => {
+  state = {checks:{}, fields:{}}; save(); document.getElementById("resetConfirm").hidden = true; render(); toast("Всё сброшено");
+});
+</script>
+</body>
+</html>
